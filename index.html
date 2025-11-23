@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>里昂旅遊指南</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      background: #f7f7f9;
+    }
+    .hero {
+      background: linear-gradient(120deg, rgba(111, 66, 193, 0.8), rgba(13, 110, 253, 0.8)), url('https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba?auto=format&fit=crop&w=1400&q=80') center/cover;
+      color: #fff;
+      border-radius: 18px;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      border-radius: 16px;
+    }
+    .badge-category {
+      font-size: 0.8rem;
+      background: rgba(13, 110, 253, 0.12);
+      color: #0d6efd;
+      border: 1px solid rgba(13, 110, 253, 0.18);
+    }
+    .list-check i {
+      color: #198754;
+      margin-right: 8px;
+    }
+    .timeline {
+      position: relative;
+    }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 24px;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, #6f42c1, #0d6efd);
+      border-radius: 2px;
+    }
+    .timeline-step {
+      position: relative;
+      padding-left: 72px;
+      margin-bottom: 32px;
+    }
+    .timeline-step:last-child {
+      margin-bottom: 0;
+    }
+    .timeline-icon {
+      position: absolute;
+      left: 12px;
+      top: -4px;
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      border: 3px solid #6f42c1;
+      color: #6f42c1;
+      border-radius: 50%;
+      font-weight: bold;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="container py-4 py-md-5">
+    <div class="hero p-4 p-md-5 mb-4 shadow-sm">
+      <div class="row align-items-center g-4">
+        <div class="col-md-7">
+          <span class="badge bg-light text-dark mb-3 px-3 py-2 fw-semibold">Vue 3.5 &amp; Bootstrap 5.3 單檔示範</span>
+          <h1 class="display-5 fw-bold mb-3">法國里昂 · 繽紛之旅</h1>
+          <p class="lead mb-4">探索美食、文化與河畔風光，精選行程一目了然，附加互動式常見問題與收藏功能。</p>
+          <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-light btn-lg" @click="activeTab = 'attractions'">探索景點</button>
+            <button class="btn btn-outline-light btn-lg" @click="activeTab = 'plan'">查看行程</button>
+            <a class="btn btn-outline-warning btn-lg" href="里昂旅遊指南.pdf" download>下載中文 PDF</a>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="glass-card p-4">
+            <h5 class="fw-semibold mb-3">今日重點</h5>
+            <ul class="list-unstyled mb-0 list-check">
+              <li v-for="item in highlights" :key="item" class="d-flex align-items-start mb-2">
+                <i class="bi bi-check-circle-fill"></i>
+                <span class="flex-grow-1">{{ item }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="glass-card p-4 mb-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+              <h4 class="fw-bold mb-1">熱門景點</h4>
+              <small class="text-muted">依類別篩選並收藏喜愛的里昂景點</small>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              <span class="badge text-bg-light border">已收藏 {{ favoriteCount }} 個</span>
+              <button class="btn btn-sm" :class="filter === '全部' ? 'btn-primary' : 'btn-outline-primary'" v-for="cat in categories" :key="cat" @click="filter = cat">{{ cat }}</button>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6" v-for="spot in filteredAttractions" :key="spot.name">
+              <div class="border rounded-4 p-3 h-100 bg-white">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <span class="badge badge-category mb-2">{{ spot.category }}</span>
+                    <h5 class="fw-bold mb-1">{{ spot.name }}</h5>
+                    <p class="text-muted small mb-2">{{ spot.description }}</p>
+                  </div>
+                  <button class="btn btn-outline-danger btn-sm" @click="toggleFavorite(spot)">
+                    <i :class="['bi', spot.favorite ? 'bi-heart-fill' : 'bi-heart']"></i>
+                  </button>
+                </div>
+                <div class="d-flex align-items-center text-secondary small">
+                  <i class="bi bi-geo-alt me-2"></i> {{ spot.address }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card p-4 mb-4" id="plan">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+              <h4 class="fw-bold mb-1">一日行程</h4>
+              <small class="text-muted">沿羅納河與索恩河，從古城到現代美術館</small>
+            </div>
+            <span class="badge bg-primary-subtle text-primary fw-semibold">建議出發 {{ itinerary.departure }}</span>
+          </div>
+          <div class="timeline">
+            <div class="timeline-step" v-for="(step, idx) in itinerary.steps" :key="step.time">
+              <div class="timeline-icon">{{ idx + 1 }}</div>
+              <div class="glass-card p-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between mb-1">
+                  <div class="fw-bold">{{ step.title }}</div>
+                  <div class="text-primary fw-semibold">{{ step.time }}</div>
+                </div>
+                <p class="mb-2 text-muted small">{{ step.detail }}</p>
+                <div class="d-flex flex-wrap gap-2">
+                  <span class="badge bg-secondary-subtle text-secondary" v-for="tag in step.tags" :key="tag">{{ tag }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card p-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+              <h4 class="fw-bold mb-1">常見問題</h4>
+              <small class="text-muted">點擊展開快速查看答案</small>
+            </div>
+            <button class="btn btn-outline-primary btn-sm" @click="expanded = expanded.size === faqs.length ? new Set() : new Set(faqs.map(f => f.q))">
+              {{ expanded.size === faqs.length ? '全部收合' : '全部展開' }}
+            </button>
+          </div>
+          <div class="accordion" id="faqAccordion">
+            <div class="accordion-item" v-for="(faq, index) in faqs" :key="faq.q">
+              <h2 class="accordion-header" :id="'heading-' + index">
+                <button class="accordion-button" type="button" :class="{'collapsed': !expanded.has(faq.q)}" @click="toggleFaq(faq.q)">
+                  {{ faq.q }}
+                </button>
+              </h2>
+              <div :id="'collapse-' + index" class="accordion-collapse collapse" :class="{'show': expanded.has(faq.q)}" :aria-labelledby="'heading-' + index" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">{{ faq.a }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="glass-card p-4 mb-4">
+          <h5 class="fw-bold mb-3">精選餐廳</h5>
+          <div class="d-flex flex-column gap-3">
+            <div class="d-flex gap-3 align-items-start" v-for="eat in restaurants" :key="eat.name">
+              <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center" style="width:54px;height:54px;">
+                <i :class="'bi ' + eat.icon"></i>
+              </div>
+              <div>
+                <div class="fw-semibold">{{ eat.name }}</div>
+                <div class="small text-muted">{{ eat.type }} · {{ eat.budget }}</div>
+                <div class="small"><i class="bi bi-geo-alt me-1"></i>{{ eat.area }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card p-4 mb-4">
+          <h5 class="fw-bold mb-3">推薦住宿</h5>
+          <div class="list-group list-group-flush">
+            <div class="list-group-item px-0" v-for="stay in stays" :key="stay.name">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="fw-semibold">{{ stay.name }}</div>
+                  <div class="small text-muted">{{ stay.location }}</div>
+                </div>
+                <span class="badge bg-warning-subtle text-warning">{{ stay.price }}</span>
+              </div>
+              <div class="small text-secondary">{{ stay.note }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card p-4">
+          <h5 class="fw-bold mb-3">聯絡表單</h5>
+          <form @submit.prevent="submitForm">
+            <div class="mb-3">
+              <label class="form-label">姓名</label>
+              <input v-model="form.name" type="text" class="form-control" placeholder="旅客姓名" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">電子郵件</label>
+              <input v-model="form.email" type="email" class="form-control" placeholder="you@example.com" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">想了解的主題</label>
+              <select v-model="form.topic" class="form-select" required>
+                <option disabled value="">請選擇</option>
+                <option>美食</option>
+                <option>文化景點</option>
+                <option>交通方式</option>
+                <option>住宿建議</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">留言</label>
+              <textarea v-model="form.message" class="form-control" rows="3" placeholder="想詢問的事項"></textarea>
+            </div>
+            <div class="d-grid">
+              <button class="btn btn-primary" type="submit">送出需求</button>
+            </div>
+            <div v-if="formStatus" class="alert alert-success mt-3 mb-0" role="alert">
+              {{ formStatus }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.12/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const { createApp, reactive, computed } = Vue;
+
+    createApp({
+      setup() {
+        const state = reactive({
+          activeTab: 'attractions',
+          filter: '全部',
+          highlights: [
+            '舊城區 UNESCO 世界遺產散步',
+            '里昂匯流博物館與當代建築',
+            '穿梭河畔品嚐傳統小酒館 Bouchon'
+          ],
+          categories: ['全部', '文化', '美食', '河畔', '藝術'],
+          attractions: [
+            { name: '富維耶聖母院', category: '文化', description: '俯瞰整座城市的地標教堂，晚間光影壯麗。', address: '8 Place de Fourvière', favorite: true },
+            { name: '里昂舊城區 Traboules 秘徑', category: '文化', description: '穿越隱密通道體驗絲綢之路的歷史風情。', address: 'Vieux Lyon', favorite: false },
+            { name: '保羅博古斯美食市集', category: '美食', description: '生鮮、市集餐吧與甜點匯聚的饕客天堂。', address: '102 Cours Lafayette', favorite: true },
+            { name: '羅納河河畔散步', category: '河畔', description: '沿河自行車與步道，夕陽時分最迷人。', address: 'Berges du Rhône', favorite: false },
+            { name: '匯流博物館', category: '藝術', description: '未來感建築與科學、文明展覽的融合。', address: '86 Quai Perrache', favorite: false },
+            { name: '絲綢博物館', category: '文化', description: '了解里昂絲綢工藝的傳統與技術。', address: '25 Rue Boissac', favorite: false }
+          ],
+          itinerary: {
+            departure: '09:00',
+            steps: [
+              { title: '舊城區早餐與纜車', time: '09:00', detail: '在 Vieux Lyon 品嚐可頌，搭乘纜車上富維耶山。', tags: ['美景', '咖啡香'] },
+              { title: '聖母院與古羅馬劇場', time: '10:00', detail: '參觀山頂大教堂與附近的古羅馬劇場遺跡。', tags: ['文化', '歷史'] },
+              { title: '河畔市集午餐', time: '12:30', detail: '前往保羅博古斯市集享用法式午餐，順道選購伴手禮。', tags: ['美食', '市集'] },
+              { title: '匯流博物館', time: '15:00', detail: '探索文明與科學展，感受現代建築魅力。', tags: ['科學', '建築'] },
+              { title: '里昂半島晚餐', time: '18:30', detail: '在河岸小酒館享用 Bouchon 料理，結束完美一天。', tags: ['晚餐', '河畔'] }
+            ]
+          },
+          restaurants: [
+            { name: 'Le Bouchon des Filles', type: 'Bouchon', budget: '€€', area: 'Croix-Rousse', icon: 'bi-egg-fried' },
+            { name: 'Les Halles de Lyon Paul Bocuse', type: '市集餐吧', budget: '€€€', area: 'Part-Dieu', icon: 'bi-basket-fill' },
+            { name: 'La Mère Brazier', type: '米其林二星', budget: '€€€€', area: 'Lafayette', icon: 'bi-star-fill' }
+          ],
+          stays: [
+            { name: 'Hotel Carlton Lyon', location: 'Bellecour · 近地鐵 A 線', price: '€€€', note: '經典風格、含早餐' },
+            { name: 'MOB Hotel', location: '匯流區 · 近博物館', price: '€€', note: '設計感公共空間與露台' },
+            { name: 'MiHotel', location: '半島區 · 近歌劇院', price: '€€€', note: '智能入住、靠近精品街區' }
+          ],
+          faqs: [
+            { q: '最佳旅遊季節是什麼時候？', a: '5-6 月與 9-10 月氣候宜人、人潮較少，適合戶外散步。' },
+            { q: '交通票券怎麼買？', a: '推薦購買 TCL 一日券，可不限次數搭乘地鐵、公車與纜車。' },
+            { q: '必吃的里昂料理有哪些？', a: '可嘗試 Bouchon 的香腸、魚丸 quenelle 及紅酒燉牛肉。' },
+            { q: '語言不通怎麼辦？', a: '觀光區店員多懂英語，可下載離線法語簡易詞典備用。' }
+          ],
+          expanded: new Set(['最佳旅遊季節是什麼時候？']),
+          form: { name: '', email: '', topic: '', message: '' },
+          formStatus: ''
+        });
+
+        const filteredAttractions = computed(() => {
+          if (state.filter === '全部') return state.attractions;
+          return state.attractions.filter(s => s.category === state.filter);
+        });
+
+        const favoriteCount = computed(() => state.attractions.filter(s => s.favorite).length);
+
+        const toggleFavorite = (spot) => {
+          spot.favorite = !spot.favorite;
+        };
+
+        const toggleFaq = (question) => {
+          state.expanded = new Set(state.expanded);
+          if (state.expanded.has(question)) state.expanded.delete(question); else state.expanded.add(question);
+        };
+
+        const submitForm = () => {
+          state.formStatus = `${state.form.name}，已收到你的 ${state.topic} 需求！`;
+          state.form = { name: '', email: '', topic: '', message: '' };
+          setTimeout(() => state.formStatus = '', 3200);
+        };
+
+        return { ...Vue.toRefs(state), filteredAttractions, favoriteCount, toggleFavorite, toggleFaq, submitForm };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
